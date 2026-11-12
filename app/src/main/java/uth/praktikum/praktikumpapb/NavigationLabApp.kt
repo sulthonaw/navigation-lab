@@ -2,7 +2,9 @@ package uth.praktikum.praktikumpapb
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -34,15 +36,19 @@ fun NavigationLabApp() {
         startDestination = Routes.HOME
     ) {
         composable(Routes.HOME) {
-            val viewModel: HomeViewModel = viewModel(
+            val homeViewModel: HomeViewModel = viewModel(
                 factory = HomeViewModel.factory(repository)
             )
+            val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+            val searchQuery by homeViewModel.searchQuery.collectAsStateWithLifecycle()
+
             HomeScreen(
-                uiState = viewModel.uiState,
-                onQueryChange = viewModel::onSearchQueryChange,
-                onSearch = viewModel::searchStudents,
-                onRetry = viewModel::loadStudents,
-                onOpenDetail = { id ->
+                uiState = uiState,
+                searchQuery = searchQuery,
+                onSearchQueryChange = homeViewModel::onSearchQueryChange,
+                onRefresh = homeViewModel::refresh,
+                onRetry = homeViewModel::retry,
+                onStudentClick = { id ->
                     navController.navigate(Routes.detail(id))
                 },
                 onOpenProfile = {
@@ -62,14 +68,16 @@ fun NavigationLabApp() {
             )
         ) { backStackEntry ->
             val studentId = backStackEntry.arguments?.getInt("studentId") ?: -1
-            val viewModel: DetailViewModel = viewModel(
+            val detailViewModel: DetailViewModel = viewModel(
                 factory = DetailViewModel.factory(repository)
             )
             LaunchedEffect(studentId) {
-                viewModel.loadStudent(studentId)
+                detailViewModel.loadStudent(studentId)
             }
+            val uiState by detailViewModel.uiState.collectAsStateWithLifecycle()
+
             DetailScreen(
-                uiState = viewModel.uiState,
+                uiState = uiState,
                 onBack = { navController.popBackStack() }
             )
         }

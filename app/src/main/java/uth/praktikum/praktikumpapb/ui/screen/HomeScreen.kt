@@ -26,10 +26,11 @@ import uth.praktikum.praktikumpapb.ui.home.HomeUiState
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onRefresh: () -> Unit,
     onRetry: () -> Unit,
-    onOpenDetail: (Int) -> Unit,
+    onStudentClick: (Int) -> Unit,
     onOpenProfile: () -> Unit,
     onOpenAbout: () -> Unit
 ) {
@@ -41,21 +42,22 @@ fun HomeScreen(
     ) {
         Text("Daftar Mahasiswa", style = MaterialTheme.typography.headlineMedium)
 
-        // Kolom Pencarian & Tombol Cari (Tugas Praktikum No. 7)
+        // Kolom Pencarian Reaktif & Tombol Refresh (Tugas Praktikum No. 7)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = onQueryChange,
-                placeholder = { Text("Cari nama...") },
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                label = { Text("Cari profil") },
+                placeholder = { Text("Ketik nama...") },
                 modifier = Modifier.weight(1f),
                 singleLine = true
             )
-            Button(onClick = onSearch) {
-                Text("Cari")
+            Button(onClick = onRefresh) {
+                Text("Refresh")
             }
         }
 
@@ -106,7 +108,7 @@ fun HomeScreen(
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onOpenDetail(student.id) }
+                                    .clickable { onStudentClick(student.id) }
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
