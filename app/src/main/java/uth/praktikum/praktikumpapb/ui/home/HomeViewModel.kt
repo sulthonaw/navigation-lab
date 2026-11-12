@@ -10,6 +10,7 @@ import uth.praktikum.praktikumpapb.data.repository.StudentRepository
 class HomeViewModel(
     private val repository: StudentRepository
 ) : ViewModel() {
+
     var uiState by mutableStateOf(HomeUiState())
         private set
 
@@ -17,9 +18,54 @@ class HomeViewModel(
         loadStudents()
     }
 
+    fun onSearchQueryChange(newQuery: String) {
+        uiState = uiState.copy(searchQuery = newQuery)
+    }
+
     fun loadStudents() {
-        val list = repository.getStudents()
-        uiState = HomeUiState(students = list)
+        uiState = uiState.copy(isLoading = true, errorMessage = null)
+        repository.getStudents { result ->
+            result
+                .onSuccess { data ->
+                    uiState = uiState.copy(
+                        students = data,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+                .onFailure { error ->
+                    uiState = uiState.copy(
+                        isLoading = false,
+                        errorMessage = error.message ?: "Gagal mengambil data"
+                    )
+                }
+        }
+    }
+
+    fun searchStudents() {
+        val query = uiState.searchQuery.trim()
+        if (query.isEmpty()) {
+            loadStudents()
+            return
+        }
+
+        uiState = uiState.copy(isLoading = true, errorMessage = null)
+        repository.searchStudents(query) { result ->
+            result
+                .onSuccess { data ->
+                    uiState = uiState.copy(
+                        students = data,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+                .onFailure { error ->
+                    uiState = uiState.copy(
+                        isLoading = false,
+                        errorMessage = error.message ?: "Gagal mencari data"
+                    )
+                }
+        }
     }
 
     companion object {

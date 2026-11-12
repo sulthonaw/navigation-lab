@@ -9,8 +9,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import uth.praktikum.praktikumpapb.data.remote.RetrofitClient
+import uth.praktikum.praktikumpapb.data.remote.StudentRemoteDataSource
 import uth.praktikum.praktikumpapb.data.repository.DefaultStudentRepository
-import uth.praktikum.praktikumpapb.data.source.StudentLocalDataSource
 import uth.praktikum.praktikumpapb.ui.detail.DetailViewModel
 import uth.praktikum.praktikumpapb.ui.home.HomeViewModel
 import uth.praktikum.praktikumpapb.ui.screen.AboutScreen
@@ -20,8 +21,12 @@ import uth.praktikum.praktikumpapb.ui.screen.ProfileScreen
 
 @Composable
 fun NavigationLabApp() {
-    val dataSource = remember { StudentLocalDataSource() }
-    val repository = remember { DefaultStudentRepository(dataSource) }
+    val remoteDataSource = remember {
+        StudentRemoteDataSource(RetrofitClient.apiService)
+    }
+    val repository = remember {
+        DefaultStudentRepository(remoteDataSource)
+    }
     val navController = rememberNavController()
 
     NavHost(
@@ -34,6 +39,9 @@ fun NavigationLabApp() {
             )
             HomeScreen(
                 uiState = viewModel.uiState,
+                onQueryChange = viewModel::onSearchQueryChange,
+                onSearch = viewModel::searchStudents,
+                onRetry = viewModel::loadStudents,
                 onOpenDetail = { id ->
                     navController.navigate(Routes.detail(id))
                 },
