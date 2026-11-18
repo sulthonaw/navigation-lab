@@ -20,7 +20,8 @@ import uth.praktikum.praktikumpapb.ui.detail.DetailUiState
 @Composable
 fun DetailScreen(
     uiState: DetailUiState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onToggleFavorite: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -73,6 +74,18 @@ fun DetailScreen(
                         Text(text = "University: ${data.university}")
                     }
                 }
+
+                Button(
+                    onClick = onToggleFavorite
+                ) {
+                    Text(
+                        if (uiState.isFavorite)
+                            "Hapus dari Favorit"
+                        else
+                            "Simpan ke Favorit"
+                    )
+                }
+
 
                 Button(
                     onClick = onBack,

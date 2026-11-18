@@ -11,11 +11,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import uth.praktikum.praktikumpapb.data.preferences.UserPreferencesRepository
 import uth.praktikum.praktikumpapb.data.repository.StudentRepository
 
 class HomeViewModel(
-    private val repository: StudentRepository
+    private val repository: StudentRepository,
+    private val preferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -26,6 +29,22 @@ class HomeViewModel(
 
     init {
         observeSearch()
+        restoreAndSaveQuery()
+    }
+
+    @OptIn(FlowPreview::class)
+    private fun restoreAndSaveQuery() {
+        viewModelScope.launch {
+            _searchQuery.value = preferencesRepository.lastSearchQuery.first()
+        }
+
+        viewModelScope.launch {
+            searchQuery
+                .debounce(500)
+                .distinctUntilChanged().collectLatest { value ->
+                    preferencesRepository.saveLastSearchQuery(value)
+                }
+        }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -104,11 +123,11 @@ class HomeViewModel(
     }
 
     companion object {
-        fun factory(repository: StudentRepository): ViewModelProvider.Factory =
+        fun factory(repository: StudentRepository, preferencesRepository: UserPreferencesRepository): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return HomeViewModel(repository) as T
+                    return HomeViewModel(repository, preferencesRepository) as T
                 }
             }
     }
